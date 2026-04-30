@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
 <meta name="theme-color" content="#3563E9">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -147,6 +147,8 @@ html,body{height:100%;font-family:var(--font);background:var(--g1);color:var(--g
 .pc{background:var(--white);border-radius:var(--r);padding:15px;box-shadow:var(--sh0);cursor:pointer;transition:all .15s;border:1.5px solid transparent}
 .pc:active{border-color:var(--primary)}
 .pc+.pc{margin-top:10px}
+.pc.closed{opacity:0.55;background:var(--g0)}
+.pc.closed .pc-tt{color:var(--g5)}
 .pc-top{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:7px}
 .pc-ag{font-size:11px;color:var(--g4);font-weight:500}
 .pc-tt{font-size:15px;font-weight:700;color:var(--g9);line-height:1.35;margin-top:2px}
@@ -256,10 +258,14 @@ html,body{height:100%;font-family:var(--font);background:var(--g1);color:var(--g
 .dv{font-size:11px;font-weight:700;text-align:right;padding:2px 0;color:#F1F5F9}
 .dpb{padding:3px 7px;border-radius:5px;background:#1E293B;color:#94A3B8;border:1px solid #334155;font-size:10px;font-weight:600;cursor:pointer;font-family:var(--font);transition:all .1s}
 .dpb.on{background:var(--primary);color:#fff;border-color:var(--primary)}
+/* ── SW UPDATE TOAST ── */
+#sw-toast{position:fixed;top:0;left:0;right:0;z-index:400;background:#1E293B;color:#F1F5F9;padding:11px 16px;display:none;align-items:center;justify-content:space-between;gap:12px;font-size:13px;font-weight:500;box-shadow:0 2px 8px rgba(0,0,0,.3)}
+#sw-toast button{padding:5px 14px;border-radius:var(--rsm);background:var(--primary);color:#fff;border:none;font-size:12px;font-weight:700;cursor:pointer;font-family:var(--font);flex-shrink:0}
 </style>
 </head>
 <body>
 <div id="app">
+<div id="sw-toast"><span>새 버전이 있습니다.</span><button onclick="location.reload()">새로고침</button></div>
 
 <!-- ① ONBOARDING -->
 <div id="s-ob" class="screen active">
@@ -276,6 +282,7 @@ html,body{height:100%;font-family:var(--font);background:var(--g1);color:var(--g
   <div class="ob-body" id="ob-body"></div>
   <div class="ob-ft">
     <button class="btn btn-p" id="ob-next" onclick="obNext()">다음</button>
+    <button class="btn btn-s" id="ob-cancel" style="display:none" onclick="obSaveAndExit()">저장하고 나가기</button>
   </div>
 </div>
 
@@ -332,7 +339,7 @@ html,body{height:100%;font-family:var(--font);background:var(--g1);color:var(--g
 <div id="s-det" class="screen overlay">
   <div class="det-hero" id="det-hero">
     <div class="hd-row" style="margin-bottom:14px">
-      <button class="back-btn w" onclick="go('list')">
+      <button class="back-btn w" onclick="goBack()">
         <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
       </button>
       <div style="flex:1"></div>
@@ -429,6 +436,7 @@ const STATE = {
 /* ═══════════════════════════════════════════════════════════════
    PART 5 · ONBOARDING
 ═══════════════════════════════════════════════════════════════ */
+var _obEditMode = false;
 const OB_STEPS = [
   {
     tag:'STEP 1 / 4', title:'기본 정보를\n알려주세요', sub:'맞춤 정책 추천을 위해 꼭 필요해요',
@@ -549,6 +557,13 @@ function obRender() {
   $('ob-bar').style.width  = `${((cur+1)/total)*100}%`;
   $('ob-body').innerHTML   = s.render();
   $('ob-next').textContent = cur === total-1 ? '대시보드로 이동 →' : '다음';
+  const c = $('ob-cancel');
+  if (c) c.style.display = _obEditMode ? 'inline-flex' : 'none';
+}
+
+function obSaveAndExit() {
+  OB_STEPS[STATE.user.ob.step].save();
+  runApp();
 }
 
 function obNext() {
@@ -581,13 +596,16 @@ function patch(fields) {
 /** renderPolicyCard(result) → HTML string */
 function renderPolicyCard(r) {
   const { policy:p, level, deadlineBucket:b, dday, reasons } = r;
-  const m = MATCH_META[level];
-  const isUrg = dday !== null && dday >= 0 && dday <= 7;
-  const ddH = b ? `<span class="ddbadge ${ddBadgeCls(b)}">${b === DDAY_B.OPEN ? '상시' : ddLabel(dday)}</span>` : '';
+  const m        = MATCH_META[level];
+  const isUrg    = dday !== null && dday >= 0 && dday <= 7;
+  const isClosed = b === DDAY_B.CLOSED;
+  const ddH      = b ? `<span class="ddbadge ${ddBadgeCls(b)}">${b === DDAY_B.OPEN ? '상시' : ddLabel(dday)}</span>` : '';
 
-  // 추천 이유 한 줄
+  // 추천 이유 한 줄 (CLOSED 우선)
   let hintHTML = '';
-  if (reasons.negative.length)
+  if (isClosed)
+    hintHTML = `<span class="pc-reason pr-neg">신청 기간 종료</span>`;
+  else if (reasons.negative.length)
     hintHTML = `<span class="pc-reason pr-neg">✗ ${reasons.negative[0].criterion} 불일치</span>`;
   else if (reasons.positive.length)
     hintHTML = `<span class="pc-reason pr-pos">✓ ${reasons.positive[0].criterion} 충족</span>`;
@@ -597,7 +615,7 @@ function renderPolicyCard(r) {
     hintHTML = `<span class="pc-reason pr-cpx">기관 확인 필요</span>`;
 
   return `
-    <div class="pc" onclick="go('det',{id:'${p.id}'})">
+    <div class="pc${isClosed ? ' closed' : ''}" onclick="go('det',{id:'${p.id}'})">
       <div class="pc-top">
         <div style="min-width:0">
           <div class="pc-ag">${p.agency} · ${p.category}</div>
@@ -612,7 +630,7 @@ function renderPolicyCard(r) {
           <svg width="11" height="11" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6l4 2"/></svg>
           ${p.isRecurring ? '상시 모집' : fmtDate(p.applicationPeriod.end)} ${ddH}
         </div>
-        <span style="font-size:12px;color:var(--primary);font-weight:600">상세보기 →</span>
+        <span style="font-size:12px;color:${isClosed?'var(--g4)':'var(--primary)'};font-weight:600">${isClosed?'마감':'상세보기 →'}</span>
       </div>
     </div>`;
 }
@@ -687,7 +705,7 @@ function renderDashboard(summary) {
 
   // 요약 행동 카드
   const allR = STATE.policies.results;
-  const weekCount = allR.filter(r => (r.level === MATCH.URGENT || r.level === MATCH.HIGH) && r.dday !== null && r.dday >= 0 && r.dday <= 7).length;
+  const weekCount = allR.filter(r => r.level === MATCH.URGENT && r.dday !== null && r.dday >= 0 && r.dday <= 7).length;
   $('d-act0').textContent = counts.urgent;
   $('d-act1').textContent = weekCount;
   $('d-act2').textContent = counts.agency;
@@ -728,6 +746,13 @@ function renderPolicyList() {
     r.policy.tags.some(t => t.includes(q))
   );
 
+  // CLOSED 정책 최하단 정렬
+  results.sort((a, b) => {
+    const aC = a.deadlineBucket === DDAY_B.CLOSED;
+    const bC = b.deadlineBucket === DDAY_B.CLOSED;
+    return aC === bC ? 0 : aC ? 1 : -1;
+  });
+
   // 필터탭 동기화
   document.querySelectorAll('.ftab').forEach(t => t.classList.toggle('on', t.dataset.f === f));
 
@@ -758,6 +783,15 @@ function renderPolicyDetail(policyId) {
   $('det-tt').textContent   = p.title;
   $('det-ag').textContent   = p.agency;
   $('det-link').href        = p.applicationUrl;
+  if (dday !== null && dday < 0) {
+    $('det-link').textContent         = '신청 기간 종료';
+    $('det-link').style.opacity       = '0.4';
+    $('det-link').style.pointerEvents = 'none';
+  } else {
+    $('det-link').textContent         = '신청하기 →';
+    $('det-link').style.opacity       = '';
+    $('det-link').style.pointerEvents = '';
+  }
 
   const ddH = b ? `<span class="ddbadge ${ddBadgeCls(b)}">${b===DDAY_B.OPEN?'상시':ddLabel(dday)}</span>` : '';
 
@@ -838,6 +872,7 @@ function markAllRead() {
   STATE.notifs.unread = 0;
   refreshBadge();
   renderNotifications();
+  persist();
 }
 
 function refreshBadge() {
@@ -855,6 +890,7 @@ const NAV_MAP    = { dash:'ni-dash', list:'ni-list', notif:'ni-notif' };
 const NAV_VISIBLE = new Set(['dash','list','notif']);
 
 function go(screen, params = {}) {
+  if (screen === 'det') STATE.app.prevScreen = STATE.app.screen;
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   const el = document.getElementById(SCREEN_MAP[screen]);
   el.classList.add('active','fade');
@@ -877,11 +913,16 @@ function go(screen, params = {}) {
   } else if (screen === 'notif') {
     renderNotifications();
   } else if (screen === 'ob') {
+    _obEditMode = !!(STATE.user.profile && STATE.user.profile.id);
     STATE.user.ob.step = 0;
     obRender();
   }
 
   el.querySelectorAll('.scr-body').forEach(b => b.scrollTop = 0);
+}
+
+function goBack() {
+  go(STATE.app.prevScreen || 'list');
 }
 
 function setF(f, el) {
@@ -897,11 +938,27 @@ function onSearch() {
 /* ═══════════════════════════════════════════════════════════════
    PART 8 · INIT
 ═══════════════════════════════════════════════════════════════ */
+/* ── SAFE STORAGE (localStorage → 메모리 fallback) ── */
+const store = (function() {
+  const mem = {};
+  return {
+    get(k)    { try { return localStorage.getItem(k); }    catch(e) { return mem[k] !== undefined ? mem[k] : null; } },
+    set(k, v) { try { localStorage.setItem(k, v); }        catch(e) { mem[k] = v; } },
+  };
+})();
+
 function runApp() {
   STATE.policies.all     = POLICIES;
   STATE.policies.results = computeAllMatches(STATE.user.profile, POLICIES);
   STATE.notifs.items     = buildNotifications(STATE.policies.results);
-  STATE.notifs.unread    = STATE.notifs.items.length;
+  try {
+    const readRaw = store.get('ysa_v2_read');
+    if (readRaw) {
+      const readIds = JSON.parse(readRaw);
+      STATE.notifs.items.forEach(n => { if (readIds.includes(n.id)) n.unread = false; });
+    }
+  } catch(e) {}
+  STATE.notifs.unread    = STATE.notifs.items.filter(n => n.unread).length;
   persist();
   refreshBadge();
   go('dash');
@@ -909,14 +966,16 @@ function runApp() {
 }
 
 function persist() {
-  try { localStorage.setItem('ysa_v2', JSON.stringify(STATE.user.profile)); } catch(e){}
+  store.set('ysa_v2', JSON.stringify(STATE.user.profile));
+  const readIds = STATE.notifs.items.filter(n => !n.unread).map(n => n.id);
+  store.set('ysa_v2_read', JSON.stringify(readIds));
 }
 
 function loadSaved() {
   try {
-    const raw = localStorage.getItem('ysa_v2');
+    const raw = store.get('ysa_v2');
     if (raw) { STATE.user.profile = JSON.parse(raw); return true; }
-  } catch(e){}
+  } catch(e) {}
   return false;
 }
 
@@ -1004,10 +1063,20 @@ function dbgLoad(key) {
   runApp();
 }
 
-// PWA Service Worker 등록
+// PWA Service Worker 등록 + 업데이트 감지
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function() {
-    navigator.serviceWorker.register('./service-worker.js').catch(function() {});
+    navigator.serviceWorker.register('./service-worker.js').then(function(reg) {
+      reg.addEventListener('updatefound', function() {
+        var sw = reg.installing;
+        sw.addEventListener('statechange', function() {
+          if (sw.state === 'installed' && navigator.serviceWorker.controller) {
+            var t = document.getElementById('sw-toast');
+            if (t) t.style.display = 'flex';
+          }
+        });
+      });
+    }).catch(function() {});
   });
 }
 </script>
