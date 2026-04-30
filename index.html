@@ -1,0 +1,1015 @@
+﻿<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<meta name="theme-color" content="#3563E9">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="청년지원">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icons/favicon.ico" sizes="any">
+<link rel="icon" type="image/png" href="icons/icon-192.png" sizes="192x192">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<title>청년지원 알리미</title>
+<style>
+/* ── TOKENS ── */
+:root {
+  --primary:#3563E9; --primary-d:#1E40AF; --primary-l:#EEF2FF;
+  --urgent:#DC2626;  --urgent-l:#FEF2F2;
+  --high:#059669;    --high-l:#ECFDF5;
+  --check:#D97706;   --check-l:#FFFBEB;
+  --agency:#7C3AED;  --agency-l:#F5F3FF;
+  --inelig:#6B7280;  --inelig-l:#F3F4F6;
+  --g0:#F8FAFC; --g1:#F1F5F9; --g2:#E2E8F0; --g3:#CBD5E1;
+  --g4:#94A3B8; --g5:#64748B; --g6:#475569; --g7:#334155;
+  --g8:#1E293B; --g9:#0F172A; --white:#fff;
+  --r:12px; --rsm:8px; --rfull:9999px;
+  --sh0:0 1px 3px rgba(0,0,0,.07),0 1px 2px rgba(0,0,0,.04);
+  --sh1:0 4px 6px -1px rgba(0,0,0,.07),0 2px 4px -1px rgba(0,0,0,.04);
+  --font:-apple-system,BlinkMacSystemFont,'Segoe UI','Noto Sans KR',sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;font-family:var(--font);background:var(--g1);color:var(--g8);line-height:1.5;font-size:16px}
+
+/* ── SHELL ── */
+#app{max-width:480px;margin:0 auto;height:100dvh;position:relative;background:var(--g0);overflow:hidden;display:flex;flex-direction:column}
+.screen{display:none;position:absolute;inset:0;flex-direction:column;overflow:hidden;background:var(--g0)}
+.screen.active{display:flex}
+.scr-body{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-bottom:80px}
+.overlay{z-index:50;background:var(--white)}
+
+/* ── BOTTOM NAV ── */
+#bnav{position:absolute;bottom:0;left:0;right:0;background:var(--white);border-top:1px solid var(--g2);display:flex;z-index:40;padding:6px 0 calc(6px + env(safe-area-inset-bottom))}
+#bnav.hide{display:none}
+.ni{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 4px;border:none;background:none;color:var(--g4);font-size:10px;font-weight:500;font-family:var(--font);cursor:pointer;transition:color .15s}
+.ni.active{color:var(--primary)}
+.ni svg{width:22px;height:22px}
+.ni-wrap{position:relative}
+.nbadge{position:absolute;top:-4px;right:-6px;background:var(--urgent);color:#fff;font-size:9px;font-weight:700;min-width:15px;height:15px;border-radius:var(--rfull);display:flex;align-items:center;justify-content:center;padding:0 3px}
+
+/* ── HEADER ── */
+.scr-hd{padding:13px 20px 11px;background:var(--white);border-bottom:1px solid var(--g1);flex-shrink:0}
+.hd-row{display:flex;align-items:center;gap:10px}
+.hd-title{font-size:17px;font-weight:800;flex:1}
+.back-btn{width:36px;height:36px;border:none;border-radius:var(--rsm);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;background:rgba(255,255,255,.15);color:var(--g7)}
+.back-btn.w{color:#fff}
+
+/* ── BUTTONS ── */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:13px 24px;border:none;border-radius:var(--r);font-size:15px;font-weight:600;cursor:pointer;font-family:var(--font);transition:all .15s;text-decoration:none;width:100%}
+.btn-p{background:var(--primary);color:#fff}.btn-p:active{background:var(--primary-d)}
+.btn-s{background:var(--g1);color:var(--g7)}
+.btn-o{background:transparent;border:1.5px solid var(--g2);color:var(--g6);width:auto;padding:7px 14px;font-size:12px;border-radius:var(--rsm)}
+.btn-ex-link{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:13px 24px;border:none;border-radius:var(--r);font-size:15px;font-weight:600;cursor:pointer;font-family:var(--font);text-decoration:none;width:100%;background:var(--primary);color:#fff}
+
+/* ── FORMS ── */
+.fg{margin-bottom:20px}
+.fl{display:block;font-size:14px;font-weight:600;color:var(--g7);margin-bottom:8px}
+.fh{font-size:12px;color:var(--g4);margin-top:5px}
+.fi{width:100%;padding:11px 14px;border:1.5px solid var(--g2);border-radius:var(--rsm);font-size:15px;font-family:var(--font);color:var(--g8);background:var(--white);outline:none;appearance:none;transition:border-color .15s}
+.fi:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(53,99,233,.1)}
+.fsel{background-image:url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");background-repeat:no-repeat;background-position:right 12px center;background-size:16px;padding-right:40px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{padding:8px 16px;border:1.5px solid var(--g2);border-radius:var(--rfull);font-size:14px;cursor:pointer;background:var(--white);color:var(--g6);font-family:var(--font);transition:all .15s}
+.chip.on{background:var(--primary-l);border-color:var(--primary);color:var(--primary);font-weight:600}
+
+/* ── MATCH BADGES ── */
+.mbadge{display:inline-flex;align-items:center;gap:3px;padding:3px 9px;border-radius:var(--rfull);font-size:11px;font-weight:700;white-space:nowrap;flex-shrink:0}
+.mb-urgent{background:var(--urgent-l);color:var(--urgent)}
+.mb-high{background:var(--high-l);color:var(--high)}
+.mb-check{background:var(--check-l);color:var(--check)}
+.mb-agency{background:var(--agency-l);color:var(--agency)}
+.mb-inelig{background:var(--inelig-l);color:var(--inelig)}
+.ddbadge{display:inline-flex;padding:2px 7px;border-radius:var(--rfull);font-size:10px;font-weight:700}
+.dd-1{background:var(--urgent-l);color:var(--urgent)}
+.dd-3{background:#FEF3C7;color:#92400E}
+.dd-7{background:#DBEAFE;color:#1E40AF}
+.dd-14{background:#D1FAE5;color:#065F46}
+.dd-ok{background:var(--g1);color:var(--g5)}
+
+/* ── ONBOARDING ── */
+#s-ob{background:var(--white)}
+.ob-hd{padding:20px 24px 0}
+.ob-prog{height:4px;background:var(--g2);border-radius:var(--rfull);overflow:hidden;margin-bottom:20px}
+.ob-bar{height:100%;background:var(--primary);border-radius:var(--rfull);transition:width .3s}
+.ob-tag{font-size:11px;color:var(--primary);font-weight:700;margin-bottom:5px}
+.ob-ttl{font-size:22px;font-weight:800;color:var(--g9);line-height:1.3;white-space:pre-line}
+.ob-sub{font-size:14px;color:var(--g5);margin-top:6px}
+.ob-body{padding:24px;flex:1;overflow-y:auto}
+.ob-ft{padding:16px 24px calc(16px + env(safe-area-inset-bottom));border-top:1px solid var(--g1);display:flex;flex-direction:column;gap:8px}
+
+/* ── HERO ── */
+.hero{background:linear-gradient(135deg,#3563E9,#1E40AF);padding:22px 20px 26px;color:#fff;flex-shrink:0}
+.hero-g{font-size:13px;opacity:.8;margin-bottom:3px}
+.hero-n{font-size:20px;font-weight:800;margin-bottom:6px}
+.hero-sub{font-size:12px;opacity:.68;margin-bottom:14px;line-height:1.4}
+.hero-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.hstat{background:rgba(255,255,255,.15);border-radius:var(--r);padding:11px 8px;text-align:center}
+.hstat-n{font-size:24px;font-weight:800}
+.hstat-l{font-size:10px;opacity:.75;margin-top:2px}
+
+/* ── ACTION SUMMARY CARDS (대시보드 요약 3카드) ── */
+.act-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:12px 16px 4px}
+.act-card{border-radius:var(--r);padding:12px 10px;text-align:center;cursor:pointer;transition:opacity .15s}
+.act-card:active{opacity:.75}
+.act-n{font-size:22px;font-weight:800;line-height:1}
+.act-l{font-size:10px;font-weight:600;margin-top:4px;opacity:.85}
+.act-now{background:var(--urgent-l);color:var(--urgent)}
+.act-week{background:#FEF3C7;color:#92400E}
+.act-agency{background:var(--agency-l);color:var(--agency)}
+
+/* ── NEXT ACTION BOX (정책 상세 다음 행동) ── */
+.next-action{border-radius:var(--r);padding:14px 16px;margin-bottom:16px}
+.next-action.na-urgent{background:var(--urgent-l);border:1.5px solid #FECACA}
+.next-action.na-high{background:var(--high-l);border:1.5px solid #A7F3D0}
+.next-action.na-check{background:var(--check-l);border:1.5px solid #FDE68A}
+.next-action.na-agency{background:var(--agency-l);border:1.5px solid #DDD6FE}
+.next-action.na-inelig{background:var(--inelig-l);border:1.5px solid var(--g2)}
+.na-title{font-size:12px;font-weight:700;opacity:.75;margin-bottom:4px}
+.na-body{font-size:14px;font-weight:600;line-height:1.45}
+.na-sub{font-size:12px;opacity:.7;margin-top:4px}
+
+/* ── REASON HINT (카드 추천 이유 한 줄) ── */
+.pc-reason{font-size:11px;font-weight:600;padding:4px 8px;border-radius:var(--rsm);margin-top:6px;display:inline-block}
+.pr-pos{background:var(--high-l);color:var(--high)}
+.pr-neg{background:var(--inelig-l);color:var(--inelig)}
+.pr-unk{background:var(--check-l);color:var(--check)}
+.pr-cpx{background:var(--agency-l);color:var(--agency)}
+
+/* ── SECTIONS ── */
+.sec{padding:16px 16px 0}
+.sec-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.sec-ttl{font-size:15px;font-weight:700;color:var(--g9)}
+.sec-more{font-size:13px;color:var(--primary);cursor:pointer;font-weight:500;background:none;border:none;font-family:var(--font)}
+
+/* ── POLICY CARD ── */
+.pc{background:var(--white);border-radius:var(--r);padding:15px;box-shadow:var(--sh0);cursor:pointer;transition:all .15s;border:1.5px solid transparent}
+.pc:active{border-color:var(--primary)}
+.pc+.pc{margin-top:10px}
+.pc-top{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:7px}
+.pc-ag{font-size:11px;color:var(--g4);font-weight:500}
+.pc-tt{font-size:15px;font-weight:700;color:var(--g9);line-height:1.35;margin-top:2px}
+.pc-desc{font-size:13px;color:var(--g5);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.pc-ft{display:flex;align-items:center;justify-content:space-between;margin-top:11px;padding-top:11px;border-top:1px solid var(--g1)}
+.pc-dl{font-size:12px;color:var(--g5);display:flex;align-items:center;gap:5px}
+.pc-dl.urg{color:var(--urgent);font-weight:600}
+
+/* ── URGENT SCROLL ── */
+.uscroll{display:flex;gap:10px;overflow-x:auto;padding:4px 16px 12px;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.uscroll::-webkit-scrollbar{display:none}
+.ucard{flex-shrink:0;width:185px;background:var(--white);border-radius:var(--r);padding:14px;box-shadow:var(--sh0);cursor:pointer;border-left:4px solid var(--urgent)}
+.ucard.w{border-color:var(--check)}
+.ucard.b{border-color:var(--primary)}
+.ucard-tt{font-size:13px;font-weight:700;color:var(--g9);margin-bottom:4px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.ucard-ag{font-size:11px;color:var(--g4)}
+.ucard-dd{font-size:14px;font-weight:800;margin-top:7px;color:var(--urgent)}
+.ucard.w .ucard-dd{color:var(--check)}
+.ucard.b .ucard-dd{color:var(--primary)}
+
+/* ── REASON CARD (핵심 신규) ── */
+.reason-card{border-radius:var(--r);overflow:hidden;margin-bottom:20px;border:1.5px solid var(--g2)}
+.reason-hd{padding:12px 16px;font-size:13px;font-weight:700;display:flex;align-items:center;gap:6px}
+.reason-hd.urgent{background:var(--urgent-l);color:var(--urgent)}
+.reason-hd.high{background:var(--high-l);color:var(--high)}
+.reason-hd.check{background:var(--check-l);color:var(--check)}
+.reason-hd.agency{background:var(--agency-l);color:var(--agency)}
+.reason-hd.inelig{background:var(--inelig-l);color:var(--inelig)}
+.reason-body{background:var(--white);padding:4px 0}
+.reason-section{padding:10px 16px 4px}
+.rs-label{font-size:11px;font-weight:700;letter-spacing:.04em;margin-bottom:6px;display:flex;align-items:center;gap:4px}
+.rs-pos .rs-label{color:var(--high)}
+.rs-unk .rs-label{color:var(--check)}
+.rs-neg .rs-label{color:var(--urgent)}
+.rs-cpx .rs-label{color:var(--agency)}
+.reason-row{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;padding:7px 0;border-bottom:1px solid var(--g0)}
+.reason-row:last-child{border-bottom:none}
+.rr-key{font-size:12px;color:var(--g5);font-weight:500;flex-shrink:0;width:72px}
+.rr-vals{display:flex;flex-direction:column;align-items:flex-end;gap:2px;text-align:right}
+.rr-mine{font-size:12px;font-weight:700}
+.rs-pos .rr-mine{color:var(--high)}
+.rs-unk .rr-mine{color:var(--check)}
+.rs-neg .rr-mine{color:var(--urgent)}
+.rr-req{font-size:11px;color:var(--g4)}
+.cpx-item{font-size:12px;color:var(--agency);padding:5px 0;border-bottom:1px solid var(--g0);line-height:1.5}
+.cpx-item:last-child{border-bottom:none}
+.cpx-item::before{content:"→ "}
+
+/* ── LIST SCREEN ── */
+.sbar{display:flex;align-items:center;padding:10px 16px;background:var(--white);border-bottom:1px solid var(--g1);gap:8px}
+.si{flex:1;padding:9px 13px;background:var(--g1);border:none;border-radius:var(--rsm);font-size:14px;font-family:var(--font);color:var(--g8);outline:none}
+.ftabs{display:flex;gap:7px;padding:10px 16px;background:var(--white);border-bottom:1px solid var(--g1);overflow-x:auto;scrollbar-width:none;flex-shrink:0}
+.ftabs::-webkit-scrollbar{display:none}
+.ftab{flex-shrink:0;padding:6px 13px;border-radius:var(--rfull);font-size:12px;font-weight:500;cursor:pointer;border:1.5px solid var(--g2);background:var(--white);color:var(--g6);font-family:var(--font);transition:all .15s}
+.ftab.on{background:var(--primary);border-color:var(--primary);color:#fff;font-weight:700}
+
+/* ── DETAIL ── */
+.det-hero{background:linear-gradient(135deg,#3563E9,#1E40AF);padding:16px 20px 22px;color:#fff;flex-shrink:0}
+.det-cat{display:inline-block;background:rgba(255,255,255,.2);padding:3px 10px;border-radius:var(--rfull);font-size:12px;font-weight:600;margin-bottom:10px}
+.det-tt{font-size:20px;font-weight:800;line-height:1.3;margin-bottom:4px}
+.det-ag{font-size:13px;opacity:.75}
+.det-body{padding:16px}
+.info-sec{margin-bottom:20px}
+.info-ttl{font-size:14px;font-weight:700;color:var(--g9);margin-bottom:10px;padding-bottom:7px;border-bottom:2px solid var(--g1)}
+.info-row{display:flex;gap:10px;padding:8px 0;border-bottom:1px solid var(--g0)}
+.ir-k{font-size:12px;color:var(--g4);font-weight:500;width:70px;flex-shrink:0}
+.ir-v{font-size:13px;color:var(--g8);font-weight:500;flex:1}
+.det-ft{padding:14px 16px calc(14px + env(safe-area-inset-bottom));background:var(--white);border-top:1px solid var(--g1);flex-shrink:0}
+.bene-box{font-size:14px;color:var(--g7);line-height:1.65;background:var(--high-l);padding:12px 14px;border-radius:var(--rsm);font-weight:500}
+
+/* ── NOTIFICATIONS ── */
+.ng-label{font-size:11px;font-weight:700;color:var(--g4);letter-spacing:.05em;text-transform:uppercase;padding:14px 16px 6px}
+.nitem{display:flex;gap:12px;padding:13px 16px;background:var(--white);border-bottom:1px solid var(--g0);cursor:pointer;transition:background .1s}
+.nitem:active{background:var(--g0)}
+.nitem.unread{background:#EEF2FF}
+.nicon{width:40px;height:40px;border-radius:var(--rsm);display:flex;align-items:center;justify-content:center;flex-size:0;font-size:20px}
+.nicon.d1{background:#FEE2E2}.nicon.d3{background:#FEF3C7}.nicon.d7{background:#DBEAFE}.nicon.d14{background:#D1FAE5}
+.n-tt{font-size:14px;font-weight:600;color:var(--g9);margin-bottom:2px}
+.n-bd{font-size:13px;color:var(--g5)}
+.n-ts{font-size:11px;color:var(--g4);margin-top:3px}
+
+/* ── PROFILE WARNING ── */
+.profile-warn{background:#FFFBEB;border:1.5px solid #FDE68A;border-radius:var(--r);padding:12px 14px;margin:14px 16px 0;display:flex;gap:10px;align-items:flex-start}
+.profile-warn-icon{font-size:18px;flex-shrink:0}
+.profile-warn-text{font-size:13px;color:#92400E;line-height:1.5}
+
+/* ── MISC ── */
+.empty{text-align:center;padding:56px 24px}
+.empty-ico{font-size:48px;margin-bottom:14px}
+.empty-tt{font-size:16px;font-weight:700;color:var(--g7);margin-bottom:6px}
+.empty-sub{font-size:14px;color:var(--g4)}
+.tag{display:inline-flex;padding:2px 8px;background:var(--g1);border-radius:var(--rfull);font-size:11px;color:var(--g5)}
+.divh{height:8px;background:var(--g1);margin:0 -16px}
+.cond-row{display:flex;gap:8px;padding:7px 0;border-bottom:1px solid var(--g0);align-items:flex-start}
+.fade{animation:fade .2s ease}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+
+/* ── DEBUG PANEL ── */
+#dbg-btn{position:absolute;top:8px;right:8px;z-index:200;padding:3px 8px;border-radius:var(--rsm);background:rgba(15,23,42,.72);color:#64748B;border:none;font-size:10px;font-weight:700;cursor:pointer;font-family:var(--font);letter-spacing:.06em;line-height:1.6;display:none}
+#dbg-btn.on{color:#F1F5F9}
+#dbg{position:absolute;top:38px;right:8px;z-index:199;width:242px;background:#0F172A;color:#E2E8F0;border-radius:10px;padding:13px;font-size:12px;font-family:var(--font);box-shadow:0 6px 20px rgba(0,0,0,.55);max-height:calc(100dvh - 110px);overflow-y:auto;display:none}
+#dbg.open{display:block}
+.dh{font-size:10px;font-weight:700;color:#475569;letter-spacing:.07em;text-transform:uppercase;margin-bottom:5px}
+.dsep{height:1px;background:#1E293B;margin:7px 0}
+.dg{display:grid;grid-template-columns:1fr auto;gap:1px 0}
+.dk{font-size:11px;color:#64748B;padding:2px 0}
+.dv{font-size:11px;font-weight:700;text-align:right;padding:2px 0;color:#F1F5F9}
+.dpb{padding:3px 7px;border-radius:5px;background:#1E293B;color:#94A3B8;border:1px solid #334155;font-size:10px;font-weight:600;cursor:pointer;font-family:var(--font);transition:all .1s}
+.dpb.on{background:var(--primary);color:#fff;border-color:var(--primary)}
+</style>
+</head>
+<body>
+<div id="app">
+
+<!-- ① ONBOARDING -->
+<div id="s-ob" class="screen active">
+  <div class="ob-hd">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+      <span style="font-size:18px;font-weight:800;color:var(--primary)">청년지원 알리미</span>
+      <span id="ob-cnt" style="font-size:12px;color:var(--g4);font-weight:500"></span>
+    </div>
+    <div class="ob-prog"><div class="ob-bar" id="ob-bar"></div></div>
+    <div id="ob-tag" class="ob-tag"></div>
+    <div id="ob-ttl" class="ob-ttl"></div>
+    <div id="ob-sub" class="ob-sub"></div>
+  </div>
+  <div class="ob-body" id="ob-body"></div>
+  <div class="ob-ft">
+    <button class="btn btn-p" id="ob-next" onclick="obNext()">다음</button>
+  </div>
+</div>
+
+<!-- ② DASHBOARD -->
+<div id="s-dash" class="screen">
+  <div class="scr-body">
+    <div class="hero">
+      <div class="hero-g" id="d-greet"></div>
+      <div class="hero-n">내 맞춤 지원정책</div>
+      <div class="hero-sub">내 조건에 맞는 청년 정책과 마감일을 한눈에</div>
+      <div class="hero-stats">
+        <div class="hstat"><div class="hstat-n" id="d-s0">0</div><div class="hstat-l">신청 가능</div></div>
+        <div class="hstat"><div class="hstat-n" id="d-s1">0</div><div class="hstat-l">확인 필요</div></div>
+        <div class="hstat"><div class="hstat-n" id="d-s2">0</div><div class="hstat-l">마감 임박</div></div>
+      </div>
+    </div>
+    <div id="d-pwarn"></div>
+    <div class="act-cards" id="d-acts">
+      <div class="act-card act-now" onclick="go('list',{f:'urgent'})"><div class="act-n" id="d-act0">0</div><div class="act-l">지금 신청 가능</div></div>
+      <div class="act-card act-week" onclick="go('list',{f:'urgent'})"><div class="act-n" id="d-act1">0</div><div class="act-l">이번 주 마감</div></div>
+      <div class="act-card act-agency" onclick="go('list',{f:'agency'})"><div class="act-n" id="d-act2">0</div><div class="act-l">기관 확인</div></div>
+    </div>
+    <div class="sec"><div class="sec-hd"><div class="sec-ttl">⚠️ 마감 임박</div><button class="sec-more" onclick="go('list',{f:'urgent'})">전체</button></div></div>
+    <div class="uscroll" id="d-urg"></div>
+    <div class="sec"><div class="sec-hd"><div class="sec-ttl">✅ 신청 가능</div><button class="sec-more" onclick="go('list',{f:'high'})">전체</button></div><div id="d-high"></div></div>
+    <div class="sec" style="padding-bottom:8px"><div class="sec-hd"><div class="sec-ttl">🔍 확인 필요</div><button class="sec-more" onclick="go('list',{f:'check'})">전체</button></div><div id="d-chk"></div></div>
+  </div>
+</div>
+
+<!-- ③ POLICY LIST -->
+<div id="s-list" class="screen">
+  <div class="scr-hd">
+    <div class="hd-row">
+      <span class="hd-title">정책 목록</span>
+      <button class="btn-o" onclick="go('ob')">프로필 수정</button>
+    </div>
+  </div>
+  <div class="sbar">
+    <svg width="15" height="15" fill="none" stroke="var(--g4)" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35"/></svg>
+    <input type="search" class="si" placeholder="정책명, 기관 검색..." id="srch" oninput="onSearch()">
+  </div>
+  <div class="ftabs" id="ftabs">
+    <button class="ftab on" data-f="all"      onclick="setF('all',this)">전체</button>
+    <button class="ftab"    data-f="urgent"   onclick="setF('urgent',this)">마감임박 🔴</button>
+    <button class="ftab"    data-f="high"     onclick="setF('high',this)">신청가능 ✅</button>
+    <button class="ftab"    data-f="check"    onclick="setF('check',this)">확인필요 🟡</button>
+    <button class="ftab"    data-f="agency"   onclick="setF('agency',this)">기관확인 🟣</button>
+    <button class="ftab"    data-f="inelig"   onclick="setF('inelig',this)">비대상</button>
+  </div>
+  <div class="scr-body"><div style="padding:12px 16px" id="list-body"></div></div>
+</div>
+
+<!-- ④ POLICY DETAIL -->
+<div id="s-det" class="screen overlay">
+  <div class="det-hero" id="det-hero">
+    <div class="hd-row" style="margin-bottom:14px">
+      <button class="back-btn w" onclick="go('list')">
+        <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+      </button>
+      <div style="flex:1"></div>
+    </div>
+    <div id="det-cat" class="det-cat"></div>
+    <div id="det-tt"  class="det-tt"></div>
+    <div id="det-ag"  class="det-ag"></div>
+  </div>
+  <div class="scr-body"><div class="det-body" id="det-body"></div></div>
+  <div class="det-ft"><a id="det-link" href="#" target="_blank" rel="noopener" class="btn-ex-link">신청하기 →</a></div>
+</div>
+
+<!-- ⑤ NOTIFICATIONS -->
+<div id="s-notif" class="screen">
+  <div class="scr-hd">
+    <div class="hd-row">
+      <span class="hd-title">알림함</span>
+      <button class="btn-o" onclick="markAllRead()">모두 읽음</button>
+    </div>
+  </div>
+  <div class="scr-body" id="notif-body"></div>
+</div>
+
+<!-- BOTTOM NAV -->
+<nav id="bnav" class="hide">
+  <button class="ni" id="ni-dash"  onclick="go('dash')">
+    <div class="ni-wrap"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg></div>홈
+  </button>
+  <button class="ni" id="ni-list"  onclick="go('list')">
+    <div class="ni-wrap"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/></svg></div>정책목록
+  </button>
+  <button class="ni" id="ni-notif" onclick="go('notif')">
+    <div class="ni-wrap"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+    <span class="nbadge" id="nbadge" style="display:none">0</span></div>알림
+  </button>
+</nav>
+<!-- DEBUG PANEL -->
+<button id="dbg-btn" onclick="dbgToggle()">DBG</button>
+<div id="dbg"><div id="dbg-in"></div></div>
+
+</div><!-- #app -->
+
+<script src="logic.js"></script>
+<script src="data/policies.js"></script>
+<script src="data/profiles.js"></script>
+<script>
+/* ── DEBUG FLAG ─────────────────────────────────────────────
+   production 배포 전 false 로 변경 → DBG 버튼 자동 숨김
+   자동 감지: localhost / file:// 환경에서는 자동으로 true
+──────────────────────────────────────────────────────────── */
+const DEBUG = (function() {
+  var h = location.hostname;
+  var isDevEnv = h === 'localhost' || h === '127.0.0.1' || location.protocol === 'file:';
+  var hasDebugParam = new URLSearchParams(location.search).get('debug') === '1';
+  return isDevEnv || hasDebugParam;
+  // 스테이징/배포 환경에서 DBG 패널 활성화: URL에 ?debug=1 추가
+  // 예) https://yoursite.com/index.html?debug=1
+})();
+
+const MATCH_META = {
+  urgent: { label:'마감 임박',       cls:'mb-urgent', hdcls:'urgent', icon:'🔴' },
+  high:   { label:'신청 가능성 높음', cls:'mb-high',   hdcls:'high',   icon:'✅' },
+  check:  { label:'추가 확인 필요',   cls:'mb-check',  hdcls:'check',  icon:'🟡' },
+  agency: { label:'기관 확인 필요',   cls:'mb-agency', hdcls:'agency', icon:'🟣' },
+  inelig: { label:'비대상',           cls:'mb-inelig', hdcls:'inelig', icon:'❌' },
+};
+
+/* ═══════════════════════════════════════════════════════════════
+   PART 2 · GLOBAL APP STATE
+   → React/Zustand 전환 시 store.ts 로 이동
+═══════════════════════════════════════════════════════════════ */
+const STATE = {
+  app: {
+    screen: 'ob',          // 'ob'|'dash'|'list'|'det'|'notif'
+    prevScreen: null,
+  },
+  user: {
+    profile: null,         // UserProfile | null
+    ob: { step: 0 },
+  },
+  policies: {
+    all: [],               // Policy[]  — init 시 할당
+    results: [],           // MatchResult[]
+    filter: 'all',
+    query: '',
+    selectedId: null,
+  },
+  notifs: {
+    items: [],             // Notification[]
+    unread: 0,
+  },
+};
+
+/* ═══════════════════════════════════════════════════════════════
+   PART 5 · ONBOARDING
+═══════════════════════════════════════════════════════════════ */
+const OB_STEPS = [
+  {
+    tag:'STEP 1 / 4', title:'기본 정보를\n알려주세요', sub:'맞춤 정책 추천을 위해 꼭 필요해요',
+    render() {
+      const regs = ['서울','부산','대구','인천','광주','대전','울산','세종','경기','강원','충북','충남','전북','전남','경북','경남','제주'];
+      const p = STATE.user.profile || {};
+      return `
+        <div class="fg"><label class="fl">이름 <span style="font-weight:400;color:var(--g4)">(선택)</span></label>
+          <input class="fi" id="ob-name" placeholder="홍길동" value="${p.name||''}" autocomplete="off"></div>
+        <div class="fg"><label class="fl">나이 <span style="color:var(--urgent)">*</span></label>
+          <input type="number" class="fi" id="ob-age" placeholder="만 나이 입력 (예: 27)" min="15" max="50" value="${p.age||''}">
+          <div class="fh">만 나이 기준</div></div>
+        <div class="fg"><label class="fl">거주 지역 <span style="color:var(--urgent)">*</span></label>
+          <select class="fi fsel" id="ob-region">
+            <option value="">시/도 선택</option>
+            ${regs.map(r=>`<option value="${r}"${p.region===r?' selected':''}>${r}</option>`).join('')}
+          </select></div>`;
+    },
+    validate() {
+      const age = parseInt($('ob-age')?.value);
+      if (!age||age<15||age>50) { alert('나이를 올바르게 입력해주세요 (15~50세)'); return false; }
+      if (!$('ob-region')?.value) { alert('거주 지역을 선택해주세요'); return false; }
+      return true;
+    },
+    save() {
+      patch({ name:$('ob-name')?.value.trim()||'', age:parseInt($('ob-age')?.value), region:$('ob-region')?.value });
+    },
+  },
+  {
+    tag:'STEP 2 / 4', title:'현재 상황을\n알려주세요', sub:'취업 상태에 따라 지원 가능한 정책이 달라져요',
+    render() {
+      const p = STATE.user.profile || {};
+      const empOpts = [{v:'employed',l:'재직 중'},{v:'unemployed',l:'미취업'},{v:'freelance',l:'프리랜서/자영업'},{v:'student',l:'재학 중'}];
+      const eduOpts = [{v:'highschool',l:'고졸'},{v:'university',l:'대학 재학/졸업'},{v:'graduate',l:'대학원'},{v:'dropout',l:'학업중단'}];
+      const empTypeOpts = [{v:'sme',l:'중소·중견기업'},{v:'large',l:'대기업'},{v:'public',l:'공공기관'},{v:'startup',l:'스타트업'}];
+      return `
+        <div class="fg"><label class="fl">취업 상태 <span style="color:var(--urgent)">*</span></label>
+          <div class="chips">${empOpts.map(o=>`<button class="chip${p.employmentStatus===o.v?' on':''}" onclick="pickChip('employmentStatus','${o.v}',this)">${o.l}</button>`).join('')}</div></div>
+        <div class="fg"><label class="fl">직장 규모 <span style="color:var(--g4);font-weight:400">(재직 중인 경우)</span></label>
+          <div class="chips">${empTypeOpts.map(o=>`<button class="chip${p.employerType===o.v?' on':''}" onclick="pickChip('employerType','${o.v}',this)">${o.l}</button>`).join('')}</div></div>
+        <div class="fg"><label class="fl">학력</label>
+          <div class="chips">${eduOpts.map(o=>`<button class="chip${p.educationLevel===o.v?' on':''}" onclick="pickChip('educationLevel','${o.v}',this)">${o.l}</button>`).join('')}</div></div>`;
+    },
+    validate() {
+      if (!STATE.user.profile?.employmentStatus) { alert('취업 상태를 선택해주세요'); return false; }
+      return true;
+    },
+    save() {},
+  },
+  {
+    tag:'STEP 3 / 4', title:'소득·가구 정보를\n입력해주세요', sub:'소득 기준에 따라 지원 조건이 크게 달라져요',
+    render() {
+      const p = STATE.user.profile || {};
+      return `
+        <div class="fg"><label class="fl">소득 구간 (중위소득 기준) <span style="color:var(--urgent)">*</span></label>
+          <select class="fi fsel" id="ob-income">
+            <option value="">선택해주세요</option>
+            <option value="level1"${p.incomeLevel==='level1'?' selected':''}>50% 이하 (기초/차상위)</option>
+            <option value="level2"${p.incomeLevel==='level2'?' selected':''}>60% 이하</option>
+            <option value="level3"${p.incomeLevel==='level3'?' selected':''}>100% 이하 (약 222만원/월·1인)</option>
+            <option value="level4"${p.incomeLevel==='level4'?' selected':''}>120% 이하</option>
+            <option value="level5"${p.incomeLevel==='level5'?' selected':''}>150% 이하</option>
+            <option value="level6"${p.incomeLevel==='level6'?' selected':''}>180% 이상</option>
+          </select>
+          <div class="fh">정확히 모르면 대략적인 구간을 선택하세요</div></div>
+        <div class="fg"><label class="fl">가구 형태</label>
+          <div class="chips">
+            <button class="chip${p.householdType==='single'?' on':''}" onclick="pickChip('householdType','single',this)">1인 가구</button>
+            <button class="chip${p.householdType==='multi'?' on':''}" onclick="pickChip('householdType','multi',this)">다인 가구</button>
+          </div></div>
+        <div class="fg"><label class="fl">무주택 여부</label>
+          <div class="chips">
+            <button class="chip${p.isHomeless===true?' on':''}" onclick="pickChip('isHomeless',true,this)">무주택</button>
+            <button class="chip${p.isHomeless===false?' on':''}" onclick="pickChip('isHomeless',false,this)">주택 보유</button>
+          </div></div>`;
+    },
+    validate() {
+      if (!$('ob-income')?.value) { alert('소득 구간을 선택해주세요'); return false; }
+      return true;
+    },
+    save() { patch({ incomeLevel:$('ob-income')?.value }); },
+  },
+  {
+    tag:'STEP 4 / 4', title:'설정 완료!', sub:'입력하신 정보를 바탕으로 맞춤 정책을 분석했어요',
+    render() {
+      const p = STATE.user.profile || {};
+      const mc = POLICIES.filter(pol => {
+        const m = matchPolicy(p, pol);
+        return m.level !== MATCH.INELIG;
+      }).length;
+      const rows = [
+        ['나이', p.age ? `만 ${p.age}세` : '-'],
+        ['지역', p.region || '-'],
+        ['취업상태', EMP_LBL[p.employmentStatus] || '-'],
+        ['소득구간', p.incomeLevel ? `중위 ${INCOME_PCT[p.incomeLevel]} 이하` : '-'],
+      ];
+      return `
+        <div style="text-align:center;padding:10px 0">
+          <div style="font-size:60px;margin-bottom:12px">🎉</div>
+          <div style="font-size:18px;font-weight:800;color:var(--g9);margin-bottom:6px">프로필 완성!</div>
+          <div style="font-size:14px;color:var(--g5);line-height:1.7">총 <strong style="color:var(--primary)">${mc}개 정책</strong>이 매칭됐어요</div>
+          <div style="background:var(--g0);border-radius:var(--r);padding:14px;margin-top:18px;text-align:left">
+            ${rows.map(([k,v])=>`<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--g2)"><span style="font-size:13px;color:var(--g4)">${k}</span><span style="font-size:13px;font-weight:700;color:var(--g8)">${v}</span></div>`).join('')}
+          </div>
+        </div>`;
+    },
+    validate() { return true; },
+    save() { patch({ id:'u_'+Date.now(), createdAt:new Date().toISOString() }); },
+  },
+];
+
+function obRender() {
+  const s = OB_STEPS[STATE.user.ob.step], total = OB_STEPS.length, cur = STATE.user.ob.step;
+  $('ob-cnt').textContent  = `${cur+1}/${total}`;
+  $('ob-tag').textContent  = s.tag;
+  $('ob-ttl').textContent  = s.title;
+  $('ob-sub').textContent  = s.sub;
+  $('ob-bar').style.width  = `${((cur+1)/total)*100}%`;
+  $('ob-body').innerHTML   = s.render();
+  $('ob-next').textContent = cur === total-1 ? '대시보드로 이동 →' : '다음';
+}
+
+function obNext() {
+  const s = OB_STEPS[STATE.user.ob.step];
+  if (!s.validate()) return;
+  s.save();
+  if (STATE.user.ob.step < OB_STEPS.length - 1) {
+    STATE.user.ob.step++;
+    obRender();
+  } else {
+    runApp();
+  }
+}
+
+function pickChip(key, value, el) {
+  patch({ [key]: value });
+  el.closest('.chips').querySelectorAll('.chip').forEach(c => c.classList.remove('on'));
+  el.classList.add('on');
+}
+
+function patch(fields) {
+  STATE.user.profile = { ...(STATE.user.profile || {}), ...fields };
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   PART 6 · RENDER FUNCTIONS  (data → HTML string, 부작용 없음)
+   → React 전환 시 각 함수가 컴포넌트가 됨
+═══════════════════════════════════════════════════════════════ */
+
+/** renderPolicyCard(result) → HTML string */
+function renderPolicyCard(r) {
+  const { policy:p, level, deadlineBucket:b, dday, reasons } = r;
+  const m = MATCH_META[level];
+  const isUrg = dday !== null && dday >= 0 && dday <= 7;
+  const ddH = b ? `<span class="ddbadge ${ddBadgeCls(b)}">${b === DDAY_B.OPEN ? '상시' : ddLabel(dday)}</span>` : '';
+
+  // 추천 이유 한 줄
+  let hintHTML = '';
+  if (reasons.negative.length)
+    hintHTML = `<span class="pc-reason pr-neg">✗ ${reasons.negative[0].criterion} 불일치</span>`;
+  else if (reasons.positive.length)
+    hintHTML = `<span class="pc-reason pr-pos">✓ ${reasons.positive[0].criterion} 충족</span>`;
+  else if (reasons.unknown.length)
+    hintHTML = `<span class="pc-reason pr-unk">? ${reasons.unknown[0].criterion} 확인 필요</span>`;
+  else if (reasons.complex.length)
+    hintHTML = `<span class="pc-reason pr-cpx">기관 확인 필요</span>`;
+
+  return `
+    <div class="pc" onclick="go('det',{id:'${p.id}'})">
+      <div class="pc-top">
+        <div style="min-width:0">
+          <div class="pc-ag">${p.agency} · ${p.category}</div>
+          <div class="pc-tt">${p.title}</div>
+        </div>
+        <span class="mbadge ${m.cls}">${m.icon} ${m.label}</span>
+      </div>
+      <div class="pc-desc">${p.description}</div>
+      ${hintHTML}
+      <div class="pc-ft" style="margin-top:8px">
+        <div class="pc-dl${isUrg?' urg':''}">
+          <svg width="11" height="11" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6l4 2"/></svg>
+          ${p.isRecurring ? '상시 모집' : fmtDate(p.applicationPeriod.end)} ${ddH}
+        </div>
+        <span style="font-size:12px;color:var(--primary);font-weight:600">상세보기 →</span>
+      </div>
+    </div>`;
+}
+
+/**
+ * renderMatchReasonCard(result) → HTML string
+ * "왜 나는 이 정책의 대상인가" 핵심 컴포넌트
+ */
+function renderMatchReasonCard(r) {
+  const { level, reasons } = r;
+  const m  = MATCH_META[level];
+  const msgMap = {
+    urgent: '모든 조건이 충족됩니다. 마감이 임박했으니 지금 바로 신청하세요!',
+    high:   '입력하신 프로필 기준으로 신청 자격이 충족될 가능성이 높습니다.',
+    check:  '일부 프로필 정보가 부족해 정확한 판단이 어렵습니다. 아래 항목을 확인해주세요.',
+    agency: '기본 조건은 충족되지만, 복잡한 조건이 있어 기관에 직접 확인이 필요합니다.',
+    inelig: '현재 입력된 정보 기준으로 신청 조건에 해당하지 않습니다.',
+  };
+
+  const posHTML = reasons.positive.length ? `
+    <div class="reason-section rs-pos">
+      <div class="rs-label">✅ 충족 조건</div>
+      ${reasons.positive.map(i=>`
+        <div class="reason-row">
+          <span class="rr-key">${i.criterion}</span>
+          <div class="rr-vals"><span class="rr-mine">${i.userValue}</span><span class="rr-req">${i.required}</span></div>
+        </div>`).join('')}
+    </div>` : '';
+
+  const unkHTML = reasons.unknown.length ? `
+    <div class="reason-section rs-unk">
+      <div class="rs-label">⚠️ 확인 필요</div>
+      ${reasons.unknown.map(i=>`
+        <div class="reason-row">
+          <span class="rr-key">${i.criterion}</span>
+          <div class="rr-vals"><span class="rr-mine">${i.reason}</span><span class="rr-req">필요: ${i.required}</span></div>
+        </div>`).join('')}
+    </div>` : '';
+
+  const negHTML = reasons.negative.length ? `
+    <div class="reason-section rs-neg">
+      <div class="rs-label">❌ 미충족 조건</div>
+      ${reasons.negative.map(i=>`
+        <div class="reason-row">
+          <span class="rr-key">${i.criterion}</span>
+          <div class="rr-vals"><span class="rr-mine">${i.userValue}</span><span class="rr-req">필요: ${i.required}</span></div>
+        </div>`).join('')}
+    </div>` : '';
+
+  const cpxHTML = reasons.complex.length ? `
+    <div class="reason-section rs-cpx">
+      <div class="rs-label">🔍 기관 확인 사항</div>
+      ${reasons.complex.map(c=>`<div class="cpx-item">${c}</div>`).join('')}
+    </div>` : '';
+
+  return `
+    <div class="reason-card">
+      <div class="reason-hd ${m.hdcls}">${m.icon} 왜 나는 대상인가? — ${m.label}</div>
+      <div style="padding:12px 16px 4px;font-size:13px;color:var(--g6);line-height:1.5">${msgMap[level]}</div>
+      <div class="reason-body">${posHTML}${unkHTML}${negHTML}${cpxHTML}</div>
+    </div>`;
+}
+
+/** renderDashboard(summary) → side-effect: DOM 업데이트 */
+function renderDashboard(summary) {
+  const { counts, urgent, applicable, needsCheck, warnings } = summary;
+  const p = STATE.user.profile;
+  $('d-greet').textContent = `안녕하세요${p?.name ? ', ' + p.name + '님' : ''} 👋`;
+  $('d-s0').textContent    = counts.urgent + counts.high;
+  $('d-s1').textContent    = counts.check  + counts.agency;
+  $('d-s2').textContent    = counts.urgent;
+
+  // 요약 행동 카드
+  const allR = STATE.policies.results;
+  const weekCount = allR.filter(r => (r.level === MATCH.URGENT || r.level === MATCH.HIGH) && r.dday !== null && r.dday >= 0 && r.dday <= 7).length;
+  $('d-act0').textContent = counts.urgent;
+  $('d-act1').textContent = weekCount;
+  $('d-act2').textContent = counts.agency;
+
+  // 프로필 미완성 경고
+  $('d-pwarn').innerHTML = warnings.length
+    ? `<div class="profile-warn"><div class="profile-warn-icon">💡</div><div class="profile-warn-text">${warnings[0]} <button onclick="go('ob')" style="color:var(--primary);font-weight:700;background:none;border:none;font-family:var(--font);cursor:pointer;font-size:13px">프로필 보완 →</button></div></div>`
+    : '';
+
+  // 마감 임박 가로 스크롤
+  $('d-urg').innerHTML = urgent.length
+    ? urgent.slice(0,6).map(r=>`
+        <div class="ucard ${urgCls(r.dday)}" onclick="go('det',{id:'${r.policy.id}'})">
+          <div class="ucard-tt">${r.policy.title}</div>
+          <div class="ucard-ag">${r.policy.agency}</div>
+          <div class="ucard-dd">${ddLabel(r.dday)}</div>
+        </div>`).join('')
+    : `<p style="padding:0 16px;font-size:13px;color:var(--g4)">마감 임박 정책이 없어요 😊</p>`;
+
+  $('d-high').innerHTML = applicable.length
+    ? applicable.map(r => renderPolicyCard(r)).join('')
+    : `<p style="font-size:13px;color:var(--g4);padding:0">매칭된 신청 가능 정책이 없습니다</p>`;
+
+  $('d-chk').innerHTML = needsCheck.length
+    ? needsCheck.map(r => renderPolicyCard(r)).join('')
+    : `<p style="font-size:13px;color:var(--g4);padding:0">확인 필요 정책이 없습니다</p>`;
+}
+
+/** renderPolicyList() → side-effect: DOM 업데이트 */
+function renderPolicyList() {
+  const f = STATE.policies.filter, q = STATE.policies.query.toLowerCase();
+  let results = [...STATE.policies.results];
+
+  if (f !== 'all') results = results.filter(r => r.level === f);
+  if (q) results = results.filter(r =>
+    r.policy.title.toLowerCase().includes(q) ||
+    r.policy.agency.toLowerCase().includes(q) ||
+    r.policy.tags.some(t => t.includes(q))
+  );
+
+  // 필터탭 동기화
+  document.querySelectorAll('.ftab').forEach(t => t.classList.toggle('on', t.dataset.f === f));
+
+  const EMPTY_MSG = {
+    urgent: { ico:'😊', tt:'마감 임박 정책이 없어요',   sub:'여유 있게 준비하세요' },
+    high:   { ico:'📋', tt:'신청 가능 정책이 없어요',   sub:'프로필을 보완하면 더 많은 정책이 매칭돼요' },
+    check:  { ico:'✅', tt:'확인 필요 항목이 없어요',   sub:'모든 조건이 확인됐거나 해당하지 않아요' },
+    agency: { ico:'📞', tt:'기관 확인 정책이 없어요',   sub:'복잡한 조건의 정책이 없어요' },
+    inelig: { ico:'🎉', tt:'비대상 정책이 없어요',      sub:'모든 정책이 내 조건에 해당해요' },
+    all:    { ico:'🔍', tt:'검색 결과가 없어요',        sub:'다른 키워드나 필터를 사용해보세요' },
+  };
+  const em = q
+    ? { ico:'🔍', tt:`"${q}" 검색 결과가 없어요`, sub:'다른 키워드로 검색해 보세요' }
+    : (EMPTY_MSG[f] || EMPTY_MSG.all);
+
+  $('list-body').innerHTML = results.length
+    ? results.map(r => renderPolicyCard(r)).join('')
+    : `<div class="empty"><div class="empty-ico">${em.ico}</div><div class="empty-tt">${em.tt}</div><div class="empty-sub">${em.sub}</div></div>`;
+}
+
+/** renderPolicyDetail(policyId) → side-effect: DOM 업데이트 */
+function renderPolicyDetail(policyId) {
+  const result = STATE.policies.results.find(r => r.policy.id === policyId);
+  if (!result) return;
+  const { policy:p, dday, deadlineBucket:b } = result;
+
+  $('det-cat').textContent  = p.category;
+  $('det-tt').textContent   = p.title;
+  $('det-ag').textContent   = p.agency;
+  $('det-link').href        = p.applicationUrl;
+
+  const ddH = b ? `<span class="ddbadge ${ddBadgeCls(b)}">${b===DDAY_B.OPEN?'상시':ddLabel(dday)}</span>` : '';
+
+  const naMap = {
+    urgent: { cls:'na-urgent', title:'지금 바로 행동하세요', body:'마감이 임박했습니다. 아래 신청 버튼을 눌러 지금 바로 접수하세요.', sub: dday === 0 ? 'D-DAY — 오늘이 마지막입니다!' : `D-${dday} — ${dday}일 남았습니다` },
+    high:   { cls:'na-high',   title:'신청 준비를 시작하세요', body:'자격 조건이 충족됩니다. 공식 페이지에서 서류를 확인하고 신청하세요.', sub: null },
+    check:  { cls:'na-check',  title:'프로필을 먼저 확인하세요', body:'일부 정보가 부족해 정확한 판단이 어렵습니다. 프로필을 보완하거나 기관 홈페이지를 직접 확인하세요.', sub: null },
+    agency: { cls:'na-agency', title:'기관에 직접 문의하세요', body:'기본 조건은 충족되지만 추가 확인이 필요합니다. 담당 기관에 전화하거나 방문하세요.', sub: result.policy.contactPoint ? result.policy.contactPoint.name + ' ' + result.policy.contactPoint.phone : null },
+    inelig: { cls:'na-inelig', title:'현재는 해당 대상이 아닙니다', body:'입력된 프로필 기준으로 자격 조건에 해당하지 않습니다. 프로필을 업데이트하면 재확인됩니다.', sub: null },
+  };
+  const na = naMap[result.level];
+
+  $('det-body').innerHTML = `
+    <div class="next-action ${na.cls}">
+      <div class="na-title">${na.title}</div>
+      <div class="na-body">${na.body}</div>
+      ${na.sub ? `<div class="na-sub">${na.sub}</div>` : ''}
+    </div>
+    ${renderMatchReasonCard(result)}
+
+    <div class="info-sec">
+      <div class="info-ttl">지원 내용</div>
+      <div class="bene-box">${p.benefits}</div>
+    </div>
+
+    <div class="info-sec">
+      <div class="info-ttl">기본 정보</div>
+      <div class="info-row"><span class="ir-k">주관 기관</span><span class="ir-v">${p.agency}</span></div>
+      <div class="info-row"><span class="ir-k">분야</span><span class="ir-v">${p.category} › ${p.subcategory}</span></div>
+      <div class="info-row"><span class="ir-k">신청 기간</span><span class="ir-v">${p.isRecurring?'상시':fmtDate(p.applicationPeriod.start)+' ~ '+fmtDate(p.applicationPeriod.end)} ${ddH}</span></div>
+      <div class="info-row"><span class="ir-k">대상 나이</span><span class="ir-v">${p.eligibility.age.min}~${p.eligibility.age.max}세</span></div>
+    </div>
+
+    <div class="info-sec">
+      <div class="info-ttl">신청 자격 조건</div>
+      ${p.conditions.map(c=>`<div class="cond-row"><span style="color:var(--primary);flex-shrink:0">•</span><span style="font-size:13px;color:var(--g7);line-height:1.55">${c}</span></div>`).join('')}
+    </div>
+
+    <div class="info-sec">
+      <div class="info-ttl">사업 개요</div>
+      <p style="font-size:14px;color:var(--g6);line-height:1.7">${p.description}</p>
+    </div>
+
+    <div style="margin-bottom:24px">
+      <div style="font-size:11px;color:var(--g4);margin-bottom:8px;font-weight:700">태그</div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px">${p.tags.map(t=>`<span class="tag">#${t}</span>`).join('')}</div>
+    </div>`;
+}
+
+/** renderNotifications() → side-effect: DOM 업데이트 */
+function renderNotifications() {
+  const items = STATE.notifs.items;
+  if (!items.length) {
+    $('notif-body').innerHTML = `<div class="empty"><div class="empty-ico">🔔</div><div class="empty-tt">지금은 알림이 없어요</div><div class="empty-sub">D-14 이내로 마감이 가까워지면 여기에 표시됩니다</div></div>`;
+    return;
+  }
+  const groups = { D1:{l:'D-1 이내 (긴급)',ic:'🚨',k:'d1'}, D3:{l:'D-3 이내',ic:'⚠️',k:'d3'}, D7:{l:'D-7 이내',ic:'📅',k:'d7'}, D14:{l:'D-14 이내',ic:'📌',k:'d14'} };
+  Object.values(groups).forEach(g => g.items = []);
+  items.forEach(n => { if (groups[n.bucket]) groups[n.bucket].items.push(n); });
+
+  $('notif-body').innerHTML = Object.values(groups)
+    .filter(g => g.items.length)
+    .map(g => `
+      <div class="ng-label">${g.l}</div>
+      ${g.items.map(n => `
+        <div class="nitem${n.unread?' unread':''}" onclick="go('det',{id:'${n.policyId}'})">
+          <div class="nicon ${g.k}">${g.ic}</div>
+          <div style="flex:1;min-width:0">
+            <div class="n-tt">${n.policyTitle}</div>
+            <div class="n-bd">마감 ${ddLabel(n.dday)} · ${n.agency}</div>
+            <div class="n-ts">오늘</div>
+          </div>
+        </div>`).join('')}`).join('');
+}
+
+function markAllRead() {
+  STATE.notifs.items.forEach(n => n.unread = false);
+  STATE.notifs.unread = 0;
+  refreshBadge();
+  renderNotifications();
+}
+
+function refreshBadge() {
+  const b = $('nbadge');
+  if (!b) return;
+  if (STATE.notifs.unread > 0) { b.style.display = 'flex'; b.textContent = STATE.notifs.unread > 9 ? '9+' : STATE.notifs.unread; }
+  else b.style.display = 'none';
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   PART 7 · NAVIGATION
+═══════════════════════════════════════════════════════════════ */
+const SCREEN_MAP = { ob:'s-ob', dash:'s-dash', list:'s-list', det:'s-det', notif:'s-notif' };
+const NAV_MAP    = { dash:'ni-dash', list:'ni-list', notif:'ni-notif' };
+const NAV_VISIBLE = new Set(['dash','list','notif']);
+
+function go(screen, params = {}) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  const el = document.getElementById(SCREEN_MAP[screen]);
+  el.classList.add('active','fade');
+  setTimeout(() => el.classList.remove('fade'), 250);
+
+  $('bnav').classList.toggle('hide', !NAV_VISIBLE.has(screen));
+  document.querySelectorAll('.ni').forEach(n => n.classList.remove('active'));
+  if (NAV_MAP[screen]) $(NAV_MAP[screen])?.classList.add('active');
+
+  STATE.app.screen = screen;
+
+  if (screen === 'dash') {
+    renderDashboard(getDashboardSummary(STATE.user.profile, STATE.policies.results));
+  } else if (screen === 'list') {
+    if (params.f) STATE.policies.filter = params.f;
+    renderPolicyList();
+  } else if (screen === 'det' && params.id) {
+    STATE.policies.selectedId = params.id;
+    renderPolicyDetail(params.id);
+  } else if (screen === 'notif') {
+    renderNotifications();
+  } else if (screen === 'ob') {
+    STATE.user.ob.step = 0;
+    obRender();
+  }
+
+  el.querySelectorAll('.scr-body').forEach(b => b.scrollTop = 0);
+}
+
+function setF(f, el) {
+  STATE.policies.filter = f;
+  renderPolicyList();
+}
+
+function onSearch() {
+  STATE.policies.query = $('srch')?.value || '';
+  renderPolicyList();
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   PART 8 · INIT
+═══════════════════════════════════════════════════════════════ */
+function runApp() {
+  STATE.policies.all     = POLICIES;
+  STATE.policies.results = computeAllMatches(STATE.user.profile, POLICIES);
+  STATE.notifs.items     = buildNotifications(STATE.policies.results);
+  STATE.notifs.unread    = STATE.notifs.items.length;
+  persist();
+  refreshBadge();
+  go('dash');
+  dbgRefresh();
+}
+
+function persist() {
+  try { localStorage.setItem('ysa_v2', JSON.stringify(STATE.user.profile)); } catch(e){}
+}
+
+function loadSaved() {
+  try {
+    const raw = localStorage.getItem('ysa_v2');
+    if (raw) { STATE.user.profile = JSON.parse(raw); return true; }
+  } catch(e){}
+  return false;
+}
+
+// utils
+function $(id) { return document.getElementById(id); }
+
+function init() {
+  if (DEBUG) document.getElementById('dbg-btn').style.display = 'block';
+  if (loadSaved() && STATE.user.profile?.id) {
+    runApp();
+  } else {
+    STATE.user.profile = { name:'', age:null, region:'', employmentStatus:'', employerType:null, incomeLevel:'', educationLevel:'', householdType:'', isHomeless:null };
+    STATE.user.ob.step = 0;
+    obRender();
+  }
+}
+
+init();
+
+/* ── DEBUG PANEL ─────────────────────────────────────────── */
+var _dbgOn = false, _dbgPKey = null;
+
+function dbgToggle() {
+  _dbgOn = !_dbgOn;
+  document.getElementById('dbg').classList.toggle('open', _dbgOn);
+  document.getElementById('dbg-btn').classList.toggle('on', _dbgOn);
+  if (_dbgOn) dbgRefresh();
+}
+
+function dbgRefresh() {
+  if (!_dbgOn) return;
+  var res = STATE.policies.results;
+  var ct = { urgent:0, high:0, check:0, agency:0, inelig:0 };
+  res.forEach(function(r) { ct[r.level]++; });
+  var d14 = res.filter(function(r) {
+    return r.dday !== null && r.dday >= 0 && r.dday <= 14;
+  }).length;
+  var p = STATE.user.profile;
+
+  function drow(lbl, val, col) {
+    return '<div class="dk">'+lbl+'</div><div class="dv" style="color:'+col+'">'+val+'</div>';
+  }
+
+  var EMP_SHORT = { employed:'재직', unemployed:'미취업', student:'재학', freelance:'프리랜서' };
+  var pbtns = Object.keys(SAMPLE_PROFILES).map(function(k, i) {
+    var sp = SAMPLE_PROFILES[k];
+    var on = (_dbgPKey === k) ? ' on' : '';
+    var lbl = 'P'+(i+1)+' '+sp.name+' ('+sp.region+'·'+(EMP_SHORT[sp.employmentStatus]||sp.employmentStatus)+')';
+    return '<button class="dpb'+on+'" onclick="dbgLoad(\''+k+'\')" title="'+lbl+'">'+
+      'P'+(i+1)+' '+sp.name+'</button>';
+  }).join('');
+
+  document.getElementById('dbg-in').innerHTML =
+    '<div class="dh">Profile</div>'+
+    '<div class="dg">'+
+      '<div class="dk">이름</div><div class="dv">'+(p&&p.name||'미설정')+'</div>'+
+      '<div class="dk">나이·지역</div>'+
+      '<div class="dv" style="color:#94A3B8">'+(p&&p.age ? '만'+p.age+'세·'+(p.region||'-') : '-')+'</div>'+
+      '<div class="dk">취업상태</div><div class="dv" style="color:#94A3B8">'+(EMP_LBL[p&&p.employmentStatus]||'-')+'</div>'+
+    '</div>'+
+    '<div class="dsep"></div>'+
+    '<div class="dh">Match Counts</div>'+
+    '<div class="dg">'+
+      drow('🔴 URGENT',  ct.urgent,  '#F87171')+
+      drow('✅ HIGH',    ct.high,    '#34D399')+
+      drow('🟡 CHECK',   ct.check,   '#FCD34D')+
+      drow('🟣 AGENCY',  ct.agency,  '#A78BFA')+
+      drow('❌ INELIG',  ct.inelig,  '#6B7280')+
+    '</div>'+
+    '<div class="dsep"></div>'+
+    '<div class="dg">'+
+      drow('D-14 이내 정책', d14+'개', '#F1F5F9')+
+      drow('🔔 미읽은 알림', STATE.notifs.unread+'개',
+        STATE.notifs.unread > 0 ? '#F87171' : '#6B7280')+
+    '</div>'+
+    '<div class="dsep"></div>'+
+    '<div class="dh">Test Profiles</div>'+
+    '<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:2px">'+pbtns+'</div>';
+}
+
+function dbgLoad(key) {
+  if (!SAMPLE_PROFILES[key]) return;
+  _dbgPKey = key;
+  STATE.user.profile = Object.assign({}, SAMPLE_PROFILES[key]);
+  runApp();
+}
+
+// PWA Service Worker 등록
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function() {
+    navigator.serviceWorker.register('./service-worker.js').catch(function() {});
+  });
+}
+</script>
+</body>
+</html>
