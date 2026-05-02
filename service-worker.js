@@ -11,7 +11,7 @@
  * 방법: CACHE_NAME 끝 숫자를 +1 후 배포 (ysa-v1 → ysa-v2)
  * 확인: DevTools → Application → Cache Storage → ysa-v*
  */
-var CACHE_NAME = 'ysa-v7';
+var CACHE_NAME = 'ysa-v8';
 var PRECACHE = [
   './',
   './index.html',

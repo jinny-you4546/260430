@@ -274,8 +274,8 @@ html,body{height:100%;font-family:var(--font);background:var(--g1);color:var(--g
 </style>
 </head>
 <body>
-<div id="app">
 <div id="sw-toast"><span>새 버전이 있습니다.</span><button onclick="location.reload()">새로고침</button></div>
+<div id="app">
 
 <!-- ① ONBOARDING -->
 <div id="s-ob" class="screen active">
@@ -1140,6 +1140,11 @@ if ('serviceWorker' in navigator) {
         });
       });
     }).catch(function() {});
+    // skipWaiting()으로 새 SW가 즉시 취득할 때 controllerchange로 토스트 표시
+    navigator.serviceWorker.addEventListener('controllerchange', function() {
+      var t = document.getElementById('sw-toast');
+      if (t) t.style.display = 'flex';
+    });
   });
 }
 
