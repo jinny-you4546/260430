@@ -261,6 +261,16 @@ html,body{height:100%;font-family:var(--font);background:var(--g1);color:var(--g
 /* ── SW UPDATE TOAST ── */
 #sw-toast{position:fixed;top:0;left:0;right:0;z-index:400;background:#1E293B;color:#F1F5F9;padding:11px 16px;display:none;align-items:center;justify-content:space-between;gap:12px;font-size:13px;font-weight:500;box-shadow:0 2px 8px rgba(0,0,0,.3)}
 #sw-toast button{padding:5px 14px;border-radius:var(--rsm);background:var(--primary);color:#fff;border:none;font-size:12px;font-weight:700;cursor:pointer;font-family:var(--font);flex-shrink:0}
+/* ── CONFIRM MODAL ── */
+#confirm-modal{position:absolute;inset:0;z-index:600;display:none;align-items:center;justify-content:center;padding:24px;background:rgba(0,0,0,.45)}
+#confirm-modal.show{display:flex}
+.cm-card{background:var(--white);border-radius:var(--r);width:100%;max-width:320px;padding:24px;box-shadow:0 8px 32px rgba(0,0,0,.2)}
+.cm-title{font-size:16px;font-weight:800;color:var(--g9);margin-bottom:8px}
+.cm-msg{font-size:14px;color:var(--g5);line-height:1.5}
+.cm-btns{display:flex;gap:8px;margin-top:20px}
+.cm-btns button{flex:1;padding:12px;border:none;border-radius:var(--rsm);font-size:14px;font-weight:700;cursor:pointer;font-family:var(--font)}
+.cm-cancel{background:var(--g1);color:var(--g7)}
+.cm-confirm{background:var(--urgent);color:#fff}
 </style>
 </head>
 <body>
@@ -272,7 +282,12 @@ html,body{height:100%;font-family:var(--font);background:var(--g1);color:var(--g
   <div class="ob-hd">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
       <span style="font-size:18px;font-weight:800;color:var(--primary)">청년지원 알리미</span>
-      <span id="ob-cnt" style="font-size:12px;color:var(--g4);font-weight:500"></span>
+      <div style="display:flex;align-items:center;gap:8px">
+        <span id="ob-cnt" style="font-size:12px;color:var(--g4);font-weight:500"></span>
+        <button id="ob-home" onclick="go('dash')" title="홈으로" style="display:none;background:none;border:none;padding:4px;cursor:pointer;color:var(--g4);line-height:0">
+          <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+        </button>
+      </div>
     </div>
     <div class="ob-prog"><div class="ob-bar" id="ob-bar"></div></div>
     <div id="ob-tag" class="ob-tag"></div>
@@ -283,6 +298,7 @@ html,body{height:100%;font-family:var(--font);background:var(--g1);color:var(--g
   <div class="ob-ft">
     <button class="btn btn-p" id="ob-next" onclick="obNext()">다음</button>
     <button class="btn btn-s" id="ob-cancel" style="display:none" onclick="obSaveAndExit()">저장하고 나가기</button>
+    <button class="btn" id="ob-reset" onclick="resetAll()" style="background:none;border:none;color:var(--g4);font-size:13px;padding:8px 0;text-decoration:underline">처음부터 다시 시작</button>
   </div>
 </div>
 
@@ -316,6 +332,9 @@ html,body{height:100%;font-family:var(--font);background:var(--g1);color:var(--g
 <div id="s-list" class="screen">
   <div class="scr-hd">
     <div class="hd-row">
+      <button class="back-btn" style="background:var(--g1)" onclick="go('dash')" title="홈으로">
+        <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+      </button>
       <span class="hd-title">정책 목록</span>
       <button class="btn-o" onclick="go('ob')">프로필 수정</button>
     </div>
@@ -343,6 +362,12 @@ html,body{height:100%;font-family:var(--font);background:var(--g1);color:var(--g
         <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
       </button>
       <div style="flex:1"></div>
+      <button class="back-btn w" onclick="go('dash')" title="홈으로">
+        <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+      </button>
+      <button class="back-btn w" onclick="resetAll()" title="처음부터" style="opacity:0.6">
+        <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+      </button>
     </div>
     <div id="det-cat" class="det-cat"></div>
     <div id="det-tt"  class="det-tt"></div>
@@ -356,6 +381,9 @@ html,body{height:100%;font-family:var(--font);background:var(--g1);color:var(--g
 <div id="s-notif" class="screen">
   <div class="scr-hd">
     <div class="hd-row">
+      <button class="back-btn" style="background:var(--g1)" onclick="go('dash')" title="홈으로">
+        <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+      </button>
       <span class="hd-title">알림함</span>
       <button class="btn-o" onclick="markAllRead()">모두 읽음</button>
     </div>
@@ -375,10 +403,25 @@ html,body{height:100%;font-family:var(--font);background:var(--g1);color:var(--g
     <div class="ni-wrap"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
     <span class="nbadge" id="nbadge" style="display:none">0</span></div>알림
   </button>
+  <button class="ni" onclick="resetAll()" style="color:var(--g3)">
+    <div class="ni-wrap"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg></div>처음부터
+  </button>
 </nav>
 <!-- DEBUG PANEL -->
 <button id="dbg-btn" onclick="dbgToggle()">DBG</button>
 <div id="dbg"><div id="dbg-in"></div></div>
+
+<!-- CONFIRM MODAL -->
+<div id="confirm-modal" onclick="cmDismiss(event)">
+  <div class="cm-card">
+    <div class="cm-title">처음부터 다시 시작</div>
+    <div class="cm-msg">모든 정보를 지우고 처음부터 다시 시작할까요?</div>
+    <div class="cm-btns">
+      <button class="cm-cancel" onclick="cmClose()">취소</button>
+      <button class="cm-confirm" onclick="cmConfirm()">초기화</button>
+    </div>
+  </div>
+</div>
 
 </div><!-- #app -->
 
@@ -559,11 +602,31 @@ function obRender() {
   $('ob-next').textContent = cur === total-1 ? '대시보드로 이동 →' : '다음';
   const c = $('ob-cancel');
   if (c) c.style.display = _obEditMode ? 'inline-flex' : 'none';
+  const h = $('ob-home');
+  if (h) h.style.display = _obEditMode ? 'inline-block' : 'none';
 }
 
 function obSaveAndExit() {
   OB_STEPS[STATE.user.ob.step].save();
   runApp();
+}
+
+function resetAll() {
+  document.getElementById('confirm-modal').classList.add('show');
+}
+function cmClose() {
+  document.getElementById('confirm-modal').classList.remove('show');
+}
+function cmDismiss(e) {
+  if (e.target === document.getElementById('confirm-modal')) cmClose();
+}
+function cmConfirm() {
+  cmClose();
+  store.remove('ysa_v2');
+  store.remove('ysa_v2_read');
+  STATE.user.profile = null;
+  STATE.notifs = { items: [], unread: 0 };
+  go('ob');
 }
 
 function obNext() {
@@ -944,6 +1007,7 @@ const store = (function() {
   return {
     get(k)    { try { return localStorage.getItem(k); }    catch(e) { return mem[k] !== undefined ? mem[k] : null; } },
     set(k, v) { try { localStorage.setItem(k, v); }        catch(e) { mem[k] = v; } },
+    remove(k) { try { localStorage.removeItem(k); }        catch(e) { delete mem[k]; } },
   };
 })();
 
@@ -988,8 +1052,7 @@ function init() {
     runApp();
   } else {
     STATE.user.profile = { name:'', age:null, region:'', employmentStatus:'', employerType:null, incomeLevel:'', educationLevel:'', householdType:'', isHomeless:null };
-    STATE.user.ob.step = 0;
-    obRender();
+    go('ob');
   }
 }
 
@@ -1079,6 +1142,12 @@ if ('serviceWorker' in navigator) {
     }).catch(function() {});
   });
 }
+
+// bfcache 복원 시 재초기화 (새로고침/재방문 시 항상 홈으로)
+window.addEventListener('pageshow', function(e) {
+  if (e.persisted) init();
+});
+
 </script>
 </body>
 </html>
